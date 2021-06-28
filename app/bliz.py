@@ -49,7 +49,7 @@ def get_individual_metadata(type):
     return data
 
 @app.route('/')
-def hello_world():
+def hello():
     return 'Hello!!'
 
 @app.route('/<card_name>')
