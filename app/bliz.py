@@ -10,6 +10,9 @@ cache = TTLCache(maxsize=100, ttl=60)
 
 @cached(cache)
 def create_access_token(client_id, client_secret):
+    '''This function receives a client ID and client secret from
+    the container env and generates a new access token'''
+
     data = { 'grant_type': 'client_credentials' }
     response = requests.post('https://us.battle.net/oauth/token',
                              data=data,
@@ -17,6 +20,9 @@ def create_access_token(client_id, client_secret):
     return response.json()['access_token']
 
 def make_requests(endpoint):
+    '''This function receives an URL and makes a get request to the hearthstone
+    API. Returns a JSON object'''
+
     access_token = create_access_token(
         os.environ['client_id'],
         os.environ['client_secret'])
@@ -31,6 +37,8 @@ def make_requests(endpoint):
 
 @cached(cache)
 def get_cards(card_class):
+    '''Receives a card class (Druid or Warlock) and returns a JSON object with all the data'''
+
     url =  'https://us.api.blizzard.com/hearthstone/cards?locale=en_US&class={}&manaCost=[7,8,9,10]' \
                '&rarity=legendary&pageSize=10&sort=id:asc'.format(card_class)
 
@@ -38,6 +46,9 @@ def get_cards(card_class):
 
 @cached(cache)
 def get_individual_metadata(type):
+    '''Receives a metadata type - class, set, rarity and type which return a JSON object. 
+    we then clean up the data and return a dictionary with the ID and name'''
+
     url = 'https://us.api.blizzard.com/hearthstone/metadata/{}?locale=en_US'.format(type)
 
     metadata = make_requests(url)
@@ -54,6 +65,11 @@ def hello():
 
 @app.route('/<card_name>')
 def generate_display_data(card_name):
+    '''Calls the get_cards method and passes a class to it. Also grabs all the required metadata.
+    Generates a list of dictionaries with all the revelant data. 
+    
+    Creates a pandas dataframe and passes it to the card_info template to generate a table'''
+
     try:
         data = get_cards(card_name)['cards']
         sets = get_individual_metadata('sets')
